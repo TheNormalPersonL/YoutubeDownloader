@@ -93,7 +93,7 @@ def DownloadVideo():
         SelectedFormat = ResolutionDropdown.get().split(" - ")[0]
         YdlOpts = {
             'format': SelectedFormat,
-            'outtmpl': './Downloaded/%(title)s.%(ext)s',
+            'outtmpl': './%(title)s.%(ext)s',
             'progress_hooks': [ProgressHook]
         }
         with YoutubeDL(YdlOpts) as Ydl:
