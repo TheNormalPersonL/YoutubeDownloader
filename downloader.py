@@ -1,3 +1,4 @@
+import os
 import customtkinter as Ctk
 from yt_dlp import YoutubeDL
 from PIL import Image
@@ -6,11 +7,12 @@ from io import BytesIO
 import threading
 
 App = Ctk.CTk()
-App.title("YouTube Video Downloader")
-App.geometry("600x500")
+App.title("Advanced YouTube Video Downloader")
+App.geometry("600x600")
 
 Ydl = None
 VideoUrl = ""
+LastReportedPercentage = 0
 
 Ctk.set_appearance_mode("dark")
 
@@ -19,6 +21,7 @@ LabelStyle = {"text_color": "white", "font": ("Arial", 14)}
 
 UrlLabel = Ctk.CTkLabel(App, text="Video URL - ", **LabelStyle)
 UrlLabel.pack(pady=(20, 5))
+
 UrlEntry = Ctk.CTkEntry(App, width=500, height=35, border_width=2, corner_radius=10)
 UrlEntry.pack(pady=5)
 
@@ -35,10 +38,16 @@ ResolutionDropdown = Ctk.CTkComboBox(App, values=[], width=300, height=35, corne
 ResolutionDropdown.pack_forget()
 
 def ProgressHook(D):
+    global LastReportedPercentage
     if D['status'] == 'downloading':
         Percentage = D['_percent_str'].strip().replace('%', '')
+        RoundedPercentage = round(float(Percentage))
+
+        if RoundedPercentage > LastReportedPercentage:
+            LastReportedPercentage = RoundedPercentage
+
         Speed = D['_speed_str'].replace('KiB/s', 'KB/s').replace('MiB/s', 'MB/s').strip()
-        StatusLabel.configure(text=f"Downloading • {Percentage}% • {Speed}")
+        StatusLabel.configure(text=f"Downloading • {LastReportedPercentage}% • {Speed}")
 
     elif D['status'] == 'finished':
         StatusLabel.configure(text="Download Successful!", text_color="green")
@@ -57,22 +66,26 @@ def FetchVideoInfo():
         
         StatusLabel.configure(text="Video information fetched successfully!", text_color="green")
         VideoTitleLabel.configure(text=f"Title - {Info['title']}")
-        
+
         ThumbnailUrl = Info['thumbnail']
         Response = requests.get(ThumbnailUrl)
         ImgData = Response.content
         Img = Image.open(BytesIO(ImgData))
-        Img.thumbnail((300, 300))
+        Img.thumbnail((200, 200))
         
         ThumbnailImage = Ctk.CTkImage(dark_image=Img)
         ThumbnailLabel.configure(image=ThumbnailImage)
         ThumbnailLabel.image = ThumbnailImage
 
-        Resolutions = [
-            f"{FormatId['format']} - {FormatId['resolution']}" 
-            for FormatId in Info['formats'] 
-            if 'resolution' in FormatId and FormatId['resolution'] != 'audio only' and 'Unknown' not in FormatId['resolution']
-        ]
+        unique_resolutions = {}
+        for FormatId in Info['formats']:
+            if 'height' in FormatId and 'filesize' in FormatId:
+                resolution = f"{FormatId['height']}p"
+                size = FormatId['filesize']
+                if resolution not in unique_resolutions or size > unique_resolutions[resolution][1]:
+                    unique_resolutions[resolution] = (FormatId['format_id'], size)
+        
+        Resolutions = [f"{res} • {round(size / 1024 / 1024, 2)}MB" for res, (format_id, size) in sorted(unique_resolutions.items(), key=lambda x: int(x[0].replace('p', '')))]
         
         ResolutionDropdown.configure(values=Resolutions)
         ResolutionDropdown.pack(pady=10)
@@ -89,11 +102,13 @@ FetchButton.pack(pady=20)
 
 def DownloadVideo():
     global VideoUrl
+    if not os.path.exists('./Downloaded'):
+        os.makedirs('./Downloaded')
     try:
-        SelectedFormat = ResolutionDropdown.get().split(" - ")[0]
+        SelectedFormat = ResolutionDropdown.get().split("p")[0] + "p"
         YdlOpts = {
-            'format': SelectedFormat,
-            'outtmpl': './%(title)s.%(ext)s',
+            'format': f"bestvideo[height={SelectedFormat[:-1]}]+bestaudio/best",
+            'outtmpl': './Downloaded/%(title)s.%(ext)s',
             'progress_hooks': [ProgressHook]
         }
         with YoutubeDL(YdlOpts) as Ydl:
