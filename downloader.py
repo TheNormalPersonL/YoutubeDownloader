@@ -7,7 +7,7 @@ from io import BytesIO
 import threading
 
 App = Ctk.CTk()
-App.title("Advanced YouTube Video Downloader")
+App.title("Definitely Normal YouTube Video Downloader")
 App.geometry("600x600")
 
 Ydl = None
