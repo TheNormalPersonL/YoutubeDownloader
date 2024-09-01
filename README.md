@@ -8,4 +8,7 @@ YouTube's safeguard might tag you as a bot, and since this program is an open-so
 PIL, Requests, yt-dlp, customtkinter
 
 ## Version
-This is the first version to ever come off. I am planning to update the code to include more download options, with UI optimizations, and more.
+V2:
+- Quality options fixed
+- UI made bigger (Will be changed in the next release)
+- Overall improvement with the GUI.
