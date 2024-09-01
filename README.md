@@ -12,3 +12,9 @@ V2:
 - Quality options fixed
 - UI made bigger (Will be changed in the next release)
 - Overall improvement with the GUI.
+
+V3:
+- A very scuffed update.
+- Made the box smaller, along with the text, textbox, buttons, and combobox.
+- Small optimization changes
+- Tried to improve download speed.
