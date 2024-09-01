@@ -8,7 +8,7 @@ import threading
 
 App = Ctk.CTk()
 App.title("Definitely Normal YouTube Video Downloader")
-App.geometry("600x600")
+App.geometry("500x450")
 
 Ydl = None
 VideoUrl = ""
@@ -16,26 +16,27 @@ LastReportedPercentage = 0
 
 Ctk.set_appearance_mode("dark")
 
-ButtonStyle = {"corner_radius": 8, "height": 40, "width": 200}
-LabelStyle = {"text_color": "white", "font": ("Arial", 14)}
+ButtonStyle = {"corner_radius": 6, "height": 30, "width": 150}
+LabelStyle = {"text_color": "white", "font": ("Arial", 12)}
 
 UrlLabel = Ctk.CTkLabel(App, text="Video URL - ", **LabelStyle)
-UrlLabel.pack(pady=(20, 5))
+UrlLabel.pack(pady=(10, 5))
 
-UrlEntry = Ctk.CTkEntry(App, width=500, height=35, border_width=2, corner_radius=10)
+UrlEntry = Ctk.CTkEntry(App, width=400, height=30, border_width=2, corner_radius=8)
 UrlEntry.pack(pady=5)
 
-StatusLabel = Ctk.CTkLabel(App, text="", font=("Arial", 12), text_color="green")
-StatusLabel.pack(pady=10)
+StatusLabel = Ctk.CTkLabel(App, text="", font=("Arial", 10), text_color="green")
+StatusLabel.pack(pady=8)
 
 ThumbnailLabel = Ctk.CTkLabel(App, text="")
-ThumbnailLabel.pack(pady=10)
+ThumbnailLabel.pack(pady=8)
 
 VideoTitleLabel = Ctk.CTkLabel(App, text="", **LabelStyle)
 VideoTitleLabel.pack(pady=5)
 
-ResolutionDropdown = Ctk.CTkComboBox(App, values=[], width=300, height=35, corner_radius=10)
+ResolutionDropdown = Ctk.CTkComboBox(App, values=[], width=250, height=30, corner_radius=8)
 ResolutionDropdown.pack_forget()
+ResolutionDropdown.set("")
 
 def ProgressHook(D):
     global LastReportedPercentage
@@ -71,7 +72,7 @@ def FetchVideoInfo():
         Response = requests.get(ThumbnailUrl)
         ImgData = Response.content
         Img = Image.open(BytesIO(ImgData))
-        Img.thumbnail((200, 200))
+        Img.thumbnail((150, 150))
         
         ThumbnailImage = Ctk.CTkImage(dark_image=Img)
         ThumbnailLabel.configure(image=ThumbnailImage)
@@ -88,9 +89,9 @@ def FetchVideoInfo():
         Resolutions = [f"{res} • {round(size / 1024 / 1024, 2)}MB" for res, (format_id, size) in sorted(unique_resolutions.items(), key=lambda x: int(x[0].replace('p', '')))]
         
         ResolutionDropdown.configure(values=Resolutions)
-        ResolutionDropdown.pack(pady=10)
+        ResolutionDropdown.pack(pady=8)
 
-        DownloadButton.pack(pady=20)
+        DownloadButton.pack(pady=10)
     except Exception as E:
         StatusLabel.configure(text="An error occurred.", text_color="red")
         print(f"Error - {E}")
@@ -98,7 +99,7 @@ def FetchVideoInfo():
             LogFile.write(f"Error occurred for URL - {VideoUrl} - {E}\n")
 
 FetchButton = Ctk.CTkButton(App, text="Fetch Video Information", command=FetchVideoInfo, **ButtonStyle)
-FetchButton.pack(pady=20)
+FetchButton.pack(pady=10)
 
 def DownloadVideo():
     global VideoUrl
@@ -109,6 +110,7 @@ def DownloadVideo():
         YdlOpts = {
             'format': f"bestvideo[height={SelectedFormat[:-1]}]+bestaudio/best",
             'outtmpl': './Downloaded/%(title)s.%(ext)s',
+            'merge_output_format': 'mp4',
             'progress_hooks': [ProgressHook]
         }
         with YoutubeDL(YdlOpts) as Ydl:
