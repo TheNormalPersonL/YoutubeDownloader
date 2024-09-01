@@ -78,12 +78,12 @@ def FetchVideoInfo():
         ThumbnailLabel.image = ThumbnailImage
 
         unique_resolutions = {}
-        for FormatId in Info['formats']:
-            if 'height' in FormatId and 'filesize' in FormatId:
-                resolution = f"{FormatId['height']}p"
-                size = FormatId['filesize']
+        for format_info in Info['formats']:
+            if 'height' in format_info and format_info['height'] is not None and 'filesize' in format_info and format_info['filesize'] is not None:
+                resolution = f"{format_info['height']}p"
+                size = format_info['filesize']
                 if resolution not in unique_resolutions or size > unique_resolutions[resolution][1]:
-                    unique_resolutions[resolution] = (FormatId['format_id'], size)
+                    unique_resolutions[resolution] = (format_info['format_id'], size)
         
         Resolutions = [f"{res} • {round(size / 1024 / 1024, 2)}MB" for res, (format_id, size) in sorted(unique_resolutions.items(), key=lambda x: int(x[0].replace('p', '')))]
         
